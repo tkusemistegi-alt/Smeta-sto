@@ -1,5 +1,6 @@
 
 name: Build Android APK
+# APK build pipeline for Smeta-STO
 
 on:
   workflow_dispatch:
