@@ -126,11 +126,20 @@ const CAT=[["Компьютерная диагностика",0.7],["Замен�
 const $=id=>document.getElementById(id);
 const ST={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
 const num=(v,min=0,max=1e12)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):0};
-const fmt=n=>Math.round(num(n)).toLocaleString('ru-RU')+' ₸';
+const fmt=n=>Math.round(Number.isFinite(Number(n))?Math.max(0,Number(n)):0).toLocaleString('ru-RU')+' ₸';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const blank=()=>({id:Date.now(),num:'№'+String(Date.now()).slice(-6),date:(()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString()})(),client:'',phone:'',plate:'',car:'',rate:8000,works:[],parts:[],disc:0,vat:16,vatOn:false,shop:'',shopPhone:'',markup:0,note:''});
+function normalizeEstimate(d){
+  const x=Object.assign(blank(),d&&typeof d==='object'?d:{});
+  x.works=Array.isArray(x.works)?x.works.filter(r=>r&&typeof r==='object').map(r=>({name:String(r.name??''),h:String(num(r.h,0,10000))})):[];
+  x.parts=Array.isArray(x.parts)?x.parts.filter(r=>r&&typeof r==='object').map(r=>({name:String(r.name??''),q:String(num(r.q,0,100000)),p:String(num(r.p,0,1e12))})):[];
+  for(const k of ['num','client','phone','plate','car','shop','shopPhone','note'])x[k]=String(x[k]??'');
+  x.rate=String(num(x.rate));x.markup=String(num(x.markup,0,10000));x.disc=num(x.disc,0,100);x.vat=num(x.vat,0,100);x.vatOn=!!x.vatOn;
+  if(!Number.isFinite(new Date(x.date).getTime()))x.date=blank().date;
+  return x;
+}
 let S=blank();
-try{const d=JSON.parse(ST.get('draft')||'null');if(d&&d.works)S=Object.assign(blank(),d)}catch(e){}
+try{const d=JSON.parse(ST.get('draft')||'null');if(d&&typeof d==='object')S=normalizeEstimate(d)}catch(e){}
 let toastT;const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)};
 
 $('cat').innerHTML='<option value="">Выберите…</option>'+CAT.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')+'<option value="x">Другая услуга…</option>';
@@ -147,7 +156,7 @@ function calc(){
 function paint(){
   const c=calc();
   $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):'0 ₸';$('tV').textContent=S.vatOn?fmt(c.v):'не включён';$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
-  S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt((+r.h||0)*(+S.rate||0))});
+  S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt(num(r.h,0,10000)*num(S.rate))});
   S.parts.forEach((r,i)=>{const e=$('ps'+i);if(e){const raw=num(r.q,0,100000)*num(r.p,0,1e12);e.textContent=fmt(raw*(1+c.markup/100))}});
   ST.set('draft',JSON.stringify(S));
 }
@@ -186,7 +195,7 @@ document.addEventListener('click',e=>{
   const d=t.dataset;
   if(d.dw!==undefined){S.works.splice(d.dw,1);rows()}
   if(d.dp!==undefined){S.parts.splice(d.dp,1);rows()}
-  if(d.open){let a=getEstimates();const f=a.find(x=>String(x.id)===d.open);if(f){S=Object.assign(blank(),f);rows();scrollTo(0,0);toast('Смета открыта')}}
+  if(d.open){let a=getEstimates();const f=a.find(x=>String(x.id)===d.open);if(f){S=normalizeEstimate(f);rows();scrollTo(0,0);toast('Смета открыта')}}
   if(d.del){let a=getEstimates().filter(x=>String(x.id)!==d.del);ST.set('estimates',JSON.stringify(a));list();toast('Смета удалена')}
 });
 $('save').onclick=()=>{
@@ -200,8 +209,8 @@ function text(){
   let t=(S.shop?S.shop+(S.shopPhone?', тел. '+S.shopPhone:'')+'\n':'')+`Смета ${S.num} от ${new Date(S.date).toLocaleDateString('ru-RU')}\n`;
   if(S.client)t+=`Клиент: ${S.client}\n`;
   if(S.car)t+=`Автомобиль: ${S.car}${S.plate?' ('+S.plate+')':''}\n`;
-  if(S.works.length){t+='\nРаботы:\n'+S.works.map(r=>`• ${r.name||'Услуга'} — ${r.h} ч × ${fmt(S.rate)} = ${fmt((+r.h||0)*(+S.rate||0))}`).join('\n')+'\n'}
-  if(S.parts.length){t+='\nЗапчасти и материалы:\n'+S.parts.map(r=>{const raw=num(r.q)*num(r.p), total=raw*(1+c.markup/100);return `• ${r.name||'Позиция'} — ${r.q} × ${fmt(r.p)}${c.markup>0?' + наценка '+c.markup+'%':''} = ${fmt(total)}`}).join('\n')+'\n'}
+  if(S.works.length){t+='\nРаботы:\n'+S.works.map(r=>`• ${r.name||'Услуга'} — ${num(r.h,0,10000)} ч × ${fmt(num(S.rate))} = ${fmt(num(r.h,0,10000)*num(S.rate))}`).join('\n')+'\n'}
+  if(S.parts.length){t+='\nЗапчасти и материалы:\n'+S.parts.map(r=>{const raw=num(r.q,0,100000)*num(r.p,0,1e12), total=raw*(1+c.markup/100);return `• ${r.name||'Позиция'} — ${num(r.q,0,100000)} × ${fmt(num(r.p,0,1e12))}${c.markup>0?' + наценка '+c.markup+'%':''} = ${fmt(total)}`}).join('\n')+'\n'}
   t+=`\nРабота: ${fmt(c.w)}\nЗапчасти${+S.markup>0?' (с наценкой '+S.markup+'%)':''}: ${fmt(c.p)}\n`;
   if(c.d)t+=`Скидка: −${fmt(c.d)}\n`;
   if(S.vatOn)t+=`НДС ${S.vat}%: ${fmt(c.v)}\n`;
