@@ -11,6 +11,7 @@ on:
     paths:
       - '.github/workflows/build-apk.yml'
       - 'index.html'
+      - 'app/src/main/**'
 
 permissions:
   contents: read
