@@ -1,28 +1,43 @@
-package kz.krgcode.smetasto;
+package kz.smeta.sto;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.webkit.WebSettings;
+import android.content.Intent;
+import android.net.Uri;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
-    @Override public void onCreate(Bundle savedInstanceState) {
+    private WebView webView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WebView web = new WebView(this);
-        web.setWebViewClient(new WebViewClient());
-        WebSettings s = web.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setAllowFileAccess(true);
-        s.setAllowContentAccess(true);
-        s.setBuiltInZoomControls(false);
-        s.setDisplayZoomControls(false);
-        web.loadUrl("file:///android_asset/index.html");
-        setContentView(web);
+        webView = new WebView(this);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.startsWith("file:///")) return false;
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                } catch (Exception ignored) {
+                }
+                return true;
+            }
+        });
+        setContentView(webView);
+        webView.loadUrl("file:///android_asset/index.html");
     }
-    @Override public void onBackPressed() {
-        WebView web=(WebView)findViewById(android.R.id.content);
-        super.onBackPressed();
+
+    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }
