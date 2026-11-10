@@ -102,6 +102,7 @@ button.x{border-color:var(--line);color:var(--bad);padding:0 12px;min-width:44px
 <div><span>Запчасти и материалы</span><span id="tP"></span></div>
 <div><span>Скидка</span><span id="tD"></span></div>
 <div><span>НДС</span><span id="tV"></span></div>
+<div hidden><span>Округление</span><span id="tR"></span></div>
 <div class="big"><span>К оплате</span><span id="tT"></span></div>
 </div>
 </section>
@@ -142,11 +143,14 @@ function calc(){
   const p=rawParts*(1+markup/100);
   const sub=w+p, d=sub*discount/100, base=sub-d;
   const v=S.vatOn?base*vat/100:0;
-  return {w,p,rawParts,markup,d,v,t:base+v};
+  const t=Math.round(base+v);
+  const shown=Math.round(w)+Math.round(p)-Math.round(d)+(S.vatOn?Math.round(v):0);
+  const rounding=t-shown;
+  return {w,p,rawParts,markup,d,v,t,rounding};
 }
 function paint(){
   const c=calc();
-  $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):'0 ₸';$('tV').textContent=S.vatOn?fmt(c.v):'не включён';$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
+  $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):'0 ₸';$('tV').textContent=S.vatOn?fmt(c.v):'не включён';$('tR').textContent=(c.rounding>0?'+':'')+fmt(c.rounding);$('tR').parentElement.hidden=c.rounding===0;$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
   S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt((+r.h||0)*(+S.rate||0))});
   S.parts.forEach((r,i)=>{const e=$('ps'+i);if(e){const raw=num(r.q)*num(r.p);e.textContent=fmt(raw*(1+c.markup/100))}});
   ST.set('draft',JSON.stringify(S));
@@ -202,6 +206,7 @@ function text(){
   t+=`\nРабота: ${fmt(c.w)}\nЗапчасти${+S.markup>0?' (с наценкой '+S.markup+'%)':''}: ${fmt(c.p)}\n`;
   if(c.d)t+=`Скидка: −${fmt(c.d)}\n`;
   if(S.vatOn)t+=`НДС ${S.vat}%: ${fmt(c.v)}\n`;
+  if(c.rounding)t+=`Округление: ${c.rounding>0?'+':''}${fmt(c.rounding)}\n`;
   return t+`К оплате: ${fmt(c.t)}`+(S.note?'\n\n'+S.note:'');
 }
 async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
