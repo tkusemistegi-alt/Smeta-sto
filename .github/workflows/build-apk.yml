@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - feature/ru-en-language
     paths:
       - '.github/workflows/build-apk.yml'
       - 'index.html'
