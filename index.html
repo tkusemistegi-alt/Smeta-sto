@@ -128,6 +128,7 @@ const I18N={
 };
 const tr=s=>I18N[s]||s;\nconst L=()=>localStorage.getItem('smeta-language')||'ru';
 function setLang(lang){
+  document.title=lang==='en'?'Auto Repair Estimate':'Смета автосервиса';
   document.documentElement.lang=lang;
   localStorage.setItem('smeta-language',lang);
   document.getElementById('language').value=lang;
@@ -176,7 +177,7 @@ function calc(){
 }
 function paint(){
   const c=calc();
-  $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):'0 ₸';$('tV').textContent=S.vatOn?fmt(c.v):'не включён';$('tR').textContent=(c.rounding>0?'+':'')+fmt(c.rounding);$('tR').parentElement.hidden=c.rounding===0;$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
+  $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):'0 ₸';$('tV').textContent=S.vatOn?fmt(c.v):(L()==='en'?'not included':'не включён');$('tR').textContent=(c.rounding>0?'+':'')+fmt(c.rounding);$('tR').parentElement.hidden=c.rounding===0;$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
   S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt((+r.h||0)*(+S.rate||0))});
   S.parts.forEach((r,i)=>{const e=$('ps'+i);if(e){const raw=num(r.q)*num(r.p);e.textContent=fmt(raw*(1+c.markup/100))}});
   ST.set('draft',JSON.stringify(S));
@@ -189,6 +190,7 @@ function rows(){
   $('works').innerHTML=S.works.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="Услуга" data-w="${i}" data-f="name" value="${esc(r.name)}"><button class="x noprint" data-dw="${i}" aria-label="Удалить услугу">✕</button></div><div class="g2"><div><label>Нормо-часы</label><input type="number" step="0.1" min="0" inputmode="decimal" data-w="${i}" data-f="h" value="${r.h}"></div><div><label>Стоимость</label><div class="sum" id="ws${i}" style="padding:10px 0"></div></div></div></div>`).join('');
   $('parts').innerHTML=S.parts.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="Запчасть" list="pl" data-p="${i}" data-f="name" value="${esc(r.name)}" placeholder="Название"><button class="x noprint" data-dp="${i}" aria-label="Удалить запчасть">✕</button></div><div class="r3"><div><label>Кол-во</label><input type="number" min="0" inputmode="decimal" data-p="${i}" data-f="q" value="${r.q}"></div><div><label>Цена, ₸</label><input type="number" min="0" inputmode="numeric" data-p="${i}" data-f="p" value="${r.p}"></div><div class="sum" id="ps${i}" style="padding-bottom:12px"></div></div></div>`).join('');
   paint();list();
+  if(document.getElementById('language')&&document.getElementById('language').value==='en')setLang('en');
 }
 function list(){
   let a=[];try{a=JSON.parse(ST.get('estimates')||'[]')}catch(e){}
@@ -258,6 +260,8 @@ $('inst').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=nul
 addEventListener('appinstalled',()=>{$('inst').hidden=true;toast('Приложение установлено')});
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 rows();
+$('language').addEventListener('change',e=>setLang(e.target.value));
+setLang(localStorage.getItem('smeta-language')||'ru');
 </script>
 </body>
 </html>
