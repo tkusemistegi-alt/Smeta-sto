@@ -138,6 +138,7 @@ function setLang(lang){
     if(!el.dataset.ruText)el.dataset.ruText=el.textContent;
     el.textContent=lang==='en'?tr(el.dataset.ruText):el.dataset.ruText;
   });
+  document.querySelectorAll('#pl option').forEach(el=>{if(!el.dataset.ruValue)el.dataset.ruValue=el.value;el.value=lang==='en'?tr(el.dataset.ruValue):el.dataset.ruValue});
   document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
     if(!el.dataset.ruPlaceholder)el.dataset.ruPlaceholder=el.placeholder;
     el.placeholder=lang==='en'?tr(el.dataset.ruPlaceholder):el.dataset.ruPlaceholder;
@@ -157,7 +158,7 @@ const CAT=[["Компьютерная диагностика",0.7],["Замен�
 const $=id=>document.getElementById(id);
 const ST={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
 const num=(v,min=0,max=1e12)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):0};
-const fmt=n=>Math.round(num(n)).toLocaleString('ru-RU')+' ₸';
+const fmt=n=>Math.round(num(n)).toLocaleString(L()==='en'?'en-US':'ru-RU')+' ₸';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const blank=()=>({id:Date.now(),num:'№'+String(Date.now()).slice(-6),date:(()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString()})(),client:'',phone:'',plate:'',car:'',rate:8000,works:[],parts:[],disc:0,vat:16,vatOn:false,shop:'',shopPhone:'',markup:0,note:''});
 let S=blank();
@@ -229,7 +230,7 @@ $('save').onclick=()=>{
 $('newEst').onclick=()=>{S=blank();rows();scrollTo(0,0)};
 function text(){
   const c=calc();
-  let t=(S.shop?S.shop+(S.shopPhone?', тел. '+S.shopPhone:'')+'\n':'')+`Смета ${S.num} от ${new Date(S.date).toLocaleDateString('ru-RU')}\n`;
+  let t=(S.shop?S.shop+(S.shopPhone?', тел. '+S.shopPhone:'')+'\n':'')+`Смета ${S.num} от ${new Date(S.date).toLocaleDateString(L()==='en'?'en-GB':'ru-RU')}\n`;
   if(S.client)t+=`Клиент: ${S.client}\n`;
   if(S.car)t+=`Автомобиль: ${S.car}${S.plate?' ('+S.plate+')':''}\n`;
   if(S.works.length){t+='\nРаботы:\n'+S.works.map(r=>`• ${r.name||'Услуга'} — ${r.h} ч × ${fmt(S.rate)} = ${fmt((+r.h||0)*(+S.rate||0))}`).join('\n')+'\n'}
