@@ -147,6 +147,7 @@ function setLang(lang){
     el.setAttribute('aria-label',lang==='en'?tr(el.dataset.ruAria):el.dataset.ruAria);
   });
   document.querySelectorAll('#cat option').forEach((el,i)=>{if(i===0)el.textContent=lang==='en'?'Select…':'Выберите…';else if(i===CAT.length+1)el.textContent=lang==='en'?'Other service…':'Другая услуга…';else if(CAT[i-1])el.textContent=lang==='en'?tr(CAT[i-1][0]):CAT[i-1][0]});
+  document.querySelectorAll('#works input[data-f="name"]').forEach((el,i)=>{if(S.works[i])el.value=lang==='en'?tr(S.works[i].name):S.works[i].name});
   document.querySelectorAll('#works label').forEach(el=>{const s=el.dataset.ruText||el.textContent;el.dataset.ruText=s;el.textContent=lang==='en'?tr(s):s});
   document.querySelectorAll('#parts label').forEach(el=>{const s=el.dataset.ruText||el.textContent;el.dataset.ruText=s;el.textContent=lang==='en'?tr(s):s});
   $('w0').textContent=lang==='en'?tr('Выберите услугу из списка: нормо-часы подставятся сами.'):'Выберите услугу из списка: нормо-часы подставятся сами.';
@@ -189,7 +190,7 @@ function rows(){
   document.querySelectorAll('[data-k]').forEach(e=>e.value=S[e.dataset.k]);
   $('vatOn').checked=S.vatOn;
   $('w0').style.display=S.works.length?'none':'';$('p0').style.display=S.parts.length?'none':'';
-  $('works').innerHTML=S.works.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="Услуга" data-w="${i}" data-f="name" value="${esc(r.name)}"><button class="x noprint" data-dw="${i}" aria-label="Удалить услугу">✕</button></div><div class="g2"><div><label>Нормо-часы</label><input type="number" step="0.1" min="0" inputmode="decimal" data-w="${i}" data-f="h" value="${r.h}"></div><div><label>Стоимость</label><div class="sum" id="ws${i}" style="padding:10px 0"></div></div></div></div>`).join('');
+  $('works').innerHTML=S.works.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="Услуга" data-w="${i}" data-f="name" value="${esc(L()==="en"?tr(r.name):r.name)}"><button class="x noprint" data-dw="${i}" aria-label="Удалить услугу">✕</button></div><div class="g2"><div><label>Нормо-часы</label><input type="number" step="0.1" min="0" inputmode="decimal" data-w="${i}" data-f="h" value="${r.h}"></div><div><label>Стоимость</label><div class="sum" id="ws${i}" style="padding:10px 0"></div></div></div></div>`).join('');
   $('parts').innerHTML=S.parts.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="Запчасть" list="pl" data-p="${i}" data-f="name" value="${esc(r.name)}" placeholder="Название"><button class="x noprint" data-dp="${i}" aria-label="Удалить запчасть">✕</button></div><div class="r3"><div><label>Кол-во</label><input type="number" min="0" inputmode="decimal" data-p="${i}" data-f="q" value="${r.q}"></div><div><label>Цена, ₸</label><input type="number" min="0" inputmode="numeric" data-p="${i}" data-f="p" value="${r.p}"></div><div class="sum" id="ps${i}" style="padding-bottom:12px"></div></div></div>`).join('');
   paint();list();
   if(document.getElementById('language')&&document.getElementById('language').value==='en')setLang('en');
@@ -201,7 +202,7 @@ function list(){
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.dataset.k){S[t.dataset.k]=t.type==='number'?String(num(t.value,0,t.id==='disc'||t.id==='vat'?100:1e12)):t.value;paint()}
-  else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):t.value;paint()}
+  else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):(L()==='en'?(Object.entries(I18N).find(([ru,en])=>en===t.value)?.[0]||t.value):t.value);paint()}
   else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=['q','p'].includes(t.dataset.f)?String(num(t.value,0,1e12)):t.value;paint()}
   else if(t.id==='vatOn'){S.vatOn=t.checked;paint()}
 });
@@ -238,7 +239,7 @@ function text(){
   if(S.vatOn)t+=`НДС ${S.vat}%: ${fmt(c.v)}\n`;
   if(c.rounding)t+=`Округление: ${c.rounding>0?'+':''}${fmt(c.rounding)}\n`;
   t+=`К оплате: ${fmt(c.t)}`+(S.note?'\n\n'+S.note:'');
-  if((localStorage.getItem('smeta-language')||'ru')==='en'){for(const [ru,en] of Object.entries(I18N))t=t.split(ru).join(en);t=t.replace('тел. ','phone: ').replace(' ч × ',' h × ').replace(' от ',' dated ')}
+  if((localStorage.getItem('smeta-language')||'ru')==='en'){for(const [ru,en] of Object.entries(I18N).sort((a,b)=>b[0].length-a[0].length))t=t.split(ru).join(en);t=t.replace('тел. ','phone: ').replace(' ч × ',' h × ').replace(' от ',' dated ')}
   return t;
 }
 async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
