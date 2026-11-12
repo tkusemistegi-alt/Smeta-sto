@@ -230,19 +230,18 @@ $('save').onclick=()=>{
 };
 $('newEst').onclick=()=>{S=blank();rows();scrollTo(0,0)};
 function text(){
-  const c=calc();
-  let t=(S.shop?S.shop+(S.shopPhone?', тел. '+S.shopPhone:'')+'\n':'')+`Смета ${S.num} от ${new Date(S.date).toLocaleDateString(L()==='en'?'en-GB':'ru-RU')}\n`;
-  if(S.client)t+=`Клиент: ${S.client}\n`;
-  if(S.car)t+=`Автомобиль: ${S.car}${S.plate?' ('+S.plate+')':''}\n`;
-  if(S.works.length){t+='\nРаботы:\n'+S.works.map(r=>`• ${r.name||'Услуга'} — ${r.h} ч × ${fmt(S.rate)} = ${fmt((+r.h||0)*(+S.rate||0))}`).join('\n')+'\n'}
-  if(S.parts.length){t+='\nЗапчасти и материалы:\n'+S.parts.map(r=>{const raw=num(r.q)*num(r.p), total=raw*(1+c.markup/100);return `• ${r.name||'Позиция'} — ${r.q} × ${fmt(r.p)}${c.markup>0?' + наценка '+c.markup+'%':''} = ${fmt(total)}`}).join('\n')+'\n'}
-  t+=`\nРабота: ${fmt(c.w)}\nЗапчасти${+S.markup>0?' (с наценкой '+S.markup+'%)':''}: ${fmt(c.p)}\n`;
-  if(c.d)t+=`Скидка: −${fmt(c.d)}\n`;
-  if(S.vatOn)t+=`НДС ${S.vat}%: ${fmt(c.v)}\n`;
-  if(c.rounding)t+=`Округление: ${c.rounding>0?'+':''}${fmt(c.rounding)}\n`;
-  t+=`К оплате: ${fmt(c.t)}`+(S.note?'\n\n'+S.note:'');
-  if((localStorage.getItem('smeta-language')||'ru')==='en'){for(const [ru,en] of Object.entries(I18N).sort((a,b)=>b[0].length-a[0].length))t=t.split(ru).join(en);t=t.replace('тел. ','phone: ').replace(' ч × ',' h × ').replace(' от ',' dated ')}
-  return t;
+  const c=calc(),en=L()==='en',T=(ru,eng)=>en?eng:ru;
+  const date=new Date(S.date).toLocaleDateString(en?'en-GB':'ru-RU');
+  let t=(S.shop?S.shop+(S.shopPhone?', '+T('тел.','phone: ') +S.shopPhone:'')+'\n':'')+T('Смета ','Estimate ')+S.num+T(' от ',' dated ')+date+'\n';
+  if(S.client)t+=T('Клиент: ','Customer: ')+S.client+'\n';
+  if(S.car)t+=T('Автомобиль: ','Vehicle: ')+S.car+(S.plate?' ('+S.plate+')':'')+'\n';
+  if(S.works.length){t+='\n'+T('Работы:','Labor:')+'\n'+S.works.map(r=>'• '+(en?tr(r.name||'Услуга'):(r.name||'Услуга'))+' — '+r.h+' '+T('ч','h')+' × '+fmt(S.rate)+' = '+fmt((+r.h||0)*(+S.rate||0))).join('\n')+'\n'}
+  if(S.parts.length){t+='\n'+T('Запчасти и материалы:','Parts and materials:')+'\n'+S.parts.map(r=>{const raw=num(r.q)*num(r.p),total=raw*(1+c.markup/100);return '• '+(en?tr(r.name||'Позиция'):(r.name||'Позиция'))+' — '+r.q+' × '+fmt(r.p)+(c.markup>0?' + '+T('наценка ','markup ')+c.markup+'%':'')+' = '+fmt(total)}).join('\n')+'\n'}
+  t+='\n'+T('Работа:','Labor:')+' '+fmt(c.w)+'\n'+T('Запчасти','Parts')+(+S.markup>0?' ('+T('с наценкой ','with ')+S.markup+'%)':'')+': '+fmt(c.p)+'\n';
+  if(c.d)t+=T('Скидка: ','Discount: ')+'−'+fmt(c.d)+'\n';
+  if(S.vatOn)t+=T('НДС ','VAT ')+S.vat+'%: '+fmt(c.v)+'\n';
+  if(c.rounding)t+=T('Округление: ','Rounding: ')+(c.rounding>0?'+':'')+fmt(c.rounding)+'\n';
+  return t+T('К оплате: ','Total due: ')+fmt(c.t)+(S.note?'\n\n'+S.note:'');
 }
 async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
 $('send').onclick=async()=>{
