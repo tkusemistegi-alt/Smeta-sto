@@ -233,7 +233,7 @@ function text(){
   if(c.d)t+=`Скидка: −${fmt(c.d)}\n`;
   if(S.vatOn)t+=`НДС ${S.vat}%: ${fmt(c.v)}\n`;
   if(c.rounding)t+=`Округление: ${c.rounding>0?'+':''}${fmt(c.rounding)}\n`;
-  return t+`К оплате: ${fmt(c.t)}`+(S.note?'\n\n'+S.note:'');
+  t+=`К оплате: ${fmt(c.t)}`+(S.note?'\n\n'+S.note:'');\n  if((localStorage.getItem('smeta-language')||'ru')==='en'){for(const [ru,en] of Object.entries(I18N))t=t.split(ru).join(en);t=t.replace('тел. ','phone: ').replace(' ч × ',' h × ').replace(' от ',' dated ')}\n  return t;
 }
 async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
 $('send').onclick=async()=>{
