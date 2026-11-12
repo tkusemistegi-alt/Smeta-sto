@@ -126,7 +126,7 @@ button.x{border-color:var(--line);color:var(--bad);padding:0 12px;min-width:44px
 const I18N={
 "Смета автосервиса":"Auto Repair Estimate","Смета на ремонт автомобиля":"Vehicle Repair Estimate","Установить приложение":"Install app","Автосервис":"Auto repair shop","Название":"Name","СТО «Мастер»":"Auto Shop","Телефон сервиса":"Shop phone","Клиент и автомобиль":"Customer and vehicle","Имя клиента":"Customer name","Телефон (WhatsApp)":"Phone (WhatsApp)","Госномер":"License plate","Марка и модель":"Make and model","Услуги и работа мастера":"Services and labor","Стоимость нормо-часа, ₸":"Hourly labor rate, ₸","Добавить услугу":"Add service","Выберите услугу из списка: нормо-часы подставятся сами.":"Choose a service: labor hours will be filled in automatically.","Запчасти и материалы":"Parts and materials","Пока ничего не добавлено.":"Nothing added yet.","Добавить запчасть":"Add part","Итоговая смета":"Estimate summary","Скидка, %":"Discount, %","Ставка НДС, %":"VAT rate, %","Наценка на запчасти, %":"Parts markup, %","Комментарий и срок действия сметы":"Notes and estimate validity","Смета действительна 7 дней":"Estimate valid for 7 days","Добавить НДС сверху":"Add VAT on top","Работа мастера":"Labor","Скидка":"Discount","НДС":"VAT","Округление":"Rounding","К оплате":"Total due","Отправить клиенту":"Send to customer","Почта":"Email","Копировать":"Copy","Печать / PDF":"Print / PDF","Сохранённые сметы":"Saved estimates","Новая смета":"New estimate","Сохранить":"Save","Отправить":"Send","Выберите…":"Select…","Другая услуга…":"Other service…","Нормо-часы":"Labor hours","Стоимость":"Cost","Услуга":"Service","Запчасть":"Part","Удалить услугу":"Remove service","Удалить запчасть":"Remove part","Название":"Name","Кол-во":"Qty","Цена, ₸":"Price, ₸","Удалить смету":"Delete estimate","Сохранённых смет пока нет.":"No saved estimates yet.","без имени":"Unnamed","авто не указано":"Vehicle not specified","Открыть":"Open","Смета открыта":"Estimate opened","Смета удалена":"Estimate deleted","Смета сохранена":"Estimate saved","Не удалось сохранить в этом браузере":"Could not save in this browser","Добавьте услуги или запчасти":"Add services or parts","Открываем WhatsApp":"Opening WhatsApp","Телефон не указан: смета скопирована":"No phone number: estimate copied","Укажите телефон клиента":"Enter the customer's phone number","Печать недоступна: скопируйте смету":"Printing unavailable: copy the estimate","Смета скопирована":"Estimate copied","Не удалось скопировать":"Could not copy","Приложение установлено":"App installed","не включён":"not included","Работы":"Labor","Работа":"Labor","Клиент":"Customer","Автомобиль":"Vehicle","Запчасти":"Parts","Позиция":"Item","наценка":"markup","Выберите услугу из списка: нормо-часы подставятся сами.":"Choose a service: labor hours are filled in automatically."
 };
-const tr=s=>I18N[s]||s;
+const tr=s=>I18N[s]||s;\nconst L=()=>localStorage.getItem('smeta-language')||'ru';
 function setLang(lang){
   document.documentElement.lang=lang;
   localStorage.setItem('smeta-language',lang);
@@ -158,7 +158,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const blank=()=>({id:Date.now(),num:'№'+String(Date.now()).slice(-6),date:(()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString()})(),client:'',phone:'',plate:'',car:'',rate:8000,works:[],parts:[],disc:0,vat:16,vatOn:false,shop:'',shopPhone:'',markup:0,note:''});
 let S=blank();
 try{const d=JSON.parse(ST.get('draft')||'null');if(d&&d.works)S=Object.assign(blank(),d)}catch(e){}
-let toastT;const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)};
+let toastT;const toast=m=>{const t=$('toast');t.textContent=L()==='en'?tr(m):m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)};
 
 $('cat').innerHTML='<option value="">Выберите…</option>'+CAT.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')+'<option value="x">Другая услуга…</option>';
 
@@ -182,7 +182,7 @@ function paint(){
   ST.set('draft',JSON.stringify(S));
 }
 function rows(){
-  $('meta').textContent='Смета '+S.num+' от '+new Date(S.date).toLocaleDateString('ru-RU');
+  $('meta').textContent=(L()==='en'?'Estimate ':'Смета ')+S.num+(L()==='en'?' dated ':' от ')+new Date(S.date).toLocaleDateString(L()==='en'?'en-GB':'ru-RU');
   document.querySelectorAll('[data-k]').forEach(e=>e.value=S[e.dataset.k]);
   $('vatOn').checked=S.vatOn;
   $('w0').style.display=S.works.length?'none':'';$('p0').style.display=S.parts.length?'none':'';
