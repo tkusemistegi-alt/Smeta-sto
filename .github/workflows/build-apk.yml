@@ -82,7 +82,7 @@ jobs:
               compileSdk 35
 
               defaultConfig {
-                  applicationId 'kz.smeta.sto'
+                  applicationId 'kz.smeta.sto.ruen.test'
                   minSdk 23
                   targetSdk 35
                   versionCode 1
@@ -96,7 +96,7 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET" />
               <application
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
-                  android:label="Смета СТО"
+                  android:label="Смета СТО RU/EN TEST"
                   android:usesCleartextTraffic="true">
                   <activity
                       android:name=".MainActivity"
