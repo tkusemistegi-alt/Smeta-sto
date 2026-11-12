@@ -52,7 +52,7 @@ button.x{border-color:var(--line);color:var(--bad);padding:0 12px;min-width:44px
 </style>
 </head>
 <body>
-<main>
+<main>\n<div class="act noprint" style="justify-content:flex-end;margin:0 0 10px"><label for="language" style="align-self:center;margin:0">Language / Язык</label><select id="language" style="width:auto;min-width:110px"><option value="ru">Русский</option><option value="en">English</option></select></div>
 <h1>Смета на ремонт автомобиля</h1>
 <p class="sub" id="meta"></p>
 <div class="act noprint" style="margin:0 0 14px"><button id="inst" class="p" hidden>Установить приложение</button></div>
@@ -123,7 +123,33 @@ button.x{border-color:var(--line);color:var(--bad);padding:0 12px;min-width:44px
 <div id="toast" role="status"></div>
 
 <script>
-const CAT=[["Компьютерная диагностика",0.7],["Замена масла и фильтра",0.5],["Замена тормозных колодок (ось)",1],["Диагностика ходовой",0.8],["Замена ремня ГРМ",3],["Замена свечей зажигания",0.6],["Развал-схождение",1],["Шиномонтаж (4 колеса)",1],["Замена аккумулятора",0.3],["Заправка кондиционера",1],["Замена амортизаторов (ось)",2]];
+const I18N={
+"Смета автосервиса":"Auto Repair Estimate","Смета на ремонт автомобиля":"Vehicle Repair Estimate","Установить приложение":"Install app","Автосервис":"Auto repair shop","Название":"Name","СТО «Мастер»":"Auto Shop","Телефон сервиса":"Shop phone","Клиент и автомобиль":"Customer and vehicle","Имя клиента":"Customer name","Телефон (WhatsApp)":"Phone (WhatsApp)","Госномер":"License plate","Марка и модель":"Make and model","Услуги и работа мастера":"Services and labor","Стоимость нормо-часа, ₸":"Hourly labor rate, ₸","Добавить услугу":"Add service","Выберите услугу из списка: нормо-часы подставятся сами.":"Choose a service: labor hours will be filled in automatically.","Запчасти и материалы":"Parts and materials","Пока ничего не добавлено.":"Nothing added yet.","Добавить запчасть":"Add part","Итоговая смета":"Estimate summary","Скидка, %":"Discount, %","Ставка НДС, %":"VAT rate, %","Наценка на запчасти, %":"Parts markup, %","Комментарий и срок действия сметы":"Notes and estimate validity","Смета действительна 7 дней":"Estimate valid for 7 days","Добавить НДС сверху":"Add VAT on top","Работа мастера":"Labor","Скидка":"Discount","НДС":"VAT","Округление":"Rounding","К оплате":"Total due","Отправить клиенту":"Send to customer","Почта":"Email","Копировать":"Copy","Печать / PDF":"Print / PDF","Сохранённые сметы":"Saved estimates","Новая смета":"New estimate","Сохранить":"Save","Отправить":"Send","Выберите…":"Select…","Другая услуга…":"Other service…","Нормо-часы":"Labor hours","Стоимость":"Cost","Услуга":"Service","Запчасть":"Part","Удалить услугу":"Remove service","Удалить запчасть":"Remove part","Название":"Name","Кол-во":"Qty","Цена, ₸":"Price, ₸","Удалить смету":"Delete estimate","Сохранённых смет пока нет.":"No saved estimates yet.","без имени":"Unnamed","авто не указано":"Vehicle not specified","Открыть":"Open","Смета открыта":"Estimate opened","Смета удалена":"Estimate deleted","Смета сохранена":"Estimate saved","Не удалось сохранить в этом браузере":"Could not save in this browser","Добавьте услуги или запчасти":"Add services or parts","Открываем WhatsApp":"Opening WhatsApp","Телефон не указан: смета скопирована":"No phone number: estimate copied","Укажите телефон клиента":"Enter the customer's phone number","Печать недоступна: скопируйте смету":"Printing unavailable: copy the estimate","Смета скопирована":"Estimate copied","Не удалось скопировать":"Could not copy","Приложение установлено":"App installed","не включён":"not included","Работы":"Labor","Работа":"Labor","Клиент":"Customer","Автомобиль":"Vehicle","Запчасти":"Parts","Позиция":"Item","наценка":"markup","Выберите услугу из списка: нормо-часы подставятся сами.":"Choose a service: labor hours are filled in automatically."
+};
+const tr=s=>I18N[s]||s;
+function setLang(lang){
+  document.documentElement.lang=lang;
+  localStorage.setItem('smeta-language',lang);
+  document.getElementById('language').value=lang;
+  document.querySelectorAll('main h1,main h2,main p,main label,main button,main small,.chk label,.tot span,.bar small').forEach(el=>{
+    if(!el.dataset.ruText)el.dataset.ruText=el.textContent;
+    el.textContent=lang==='en'?tr(el.dataset.ruText):el.dataset.ruText;
+  });
+  document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
+    if(!el.dataset.ruPlaceholder)el.dataset.ruPlaceholder=el.placeholder;
+    el.placeholder=lang==='en'?tr(el.dataset.ruPlaceholder):el.dataset.ruPlaceholder;
+  });
+  document.querySelectorAll('[aria-label]').forEach(el=>{
+    if(!el.dataset.ruAria)el.dataset.ruAria=el.getAttribute('aria-label');
+    el.setAttribute('aria-label',lang==='en'?tr(el.dataset.ruAria):el.dataset.ruAria);
+  });
+  document.querySelectorAll('#cat option').forEach((el,i)=>{if(i===0)el.textContent=lang==='en'?'Select…':'Выберите…';else if(i===CAT.length+1)el.textContent=lang==='en'?'Other service…':'Другая услуга…';else if(CAT[i-1])el.textContent=lang==='en'?tr(CAT[i-1][0]):CAT[i-1][0]});
+  document.querySelectorAll('#works label').forEach(el=>{const s=el.dataset.ruText||el.textContent;el.dataset.ruText=s;el.textContent=lang==='en'?tr(s):s});
+  document.querySelectorAll('#parts label').forEach(el=>{const s=el.dataset.ruText||el.textContent;el.dataset.ruText=s;el.textContent=lang==='en'?tr(s):s});
+  $('w0').textContent=lang==='en'?tr('Выберите услугу из списка: нормо-часы подставятся сами.'):'Выберите услугу из списка: нормо-часы подставятся сами.';
+  $('p0').textContent=lang==='en'?tr('Пока ничего не добавлено.'):'Пока ничего не добавлено.';
+}
+\nconst CAT=[["Компьютерная диагностика",0.7],["Замена масла и фильтра",0.5],["Замена тормозных колодок (ось)",1],["Диагностика ходовой",0.8],["Замена ремня ГРМ",3],["Замена свечей зажигания",0.6],["Развал-схождение",1],["Шиномонтаж (4 колеса)",1],["Замена аккумулятора",0.3],["Заправка кондиционера",1],["Замена амортизаторов (ось)",2]];
 const $=id=>document.getElementById(id);
 const ST={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
 const num=(v,min=0,max=1e12)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):0};
