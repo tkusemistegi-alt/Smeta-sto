@@ -1,6 +1,5 @@
-
 name: Build Android APK
-# APK build pipeline for Smeta-STO
+# Builds a native Android WebView app and publishes a directly downloadable APK.
 
 on:
   workflow_dispatch:
@@ -42,7 +41,6 @@ jobs:
         run: |
           mkdir -p app/src/main/java/kz/smeta/sto
           mkdir -p app/src/main/assets
-
           cp index.html app/src/main/assets/index.html
 
           cat > settings.gradle <<'EOF'
@@ -129,39 +127,28 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-
                   webView = new WebView(this);
                   webView.getSettings().setJavaScriptEnabled(true);
                   webView.getSettings().setDomStorageEnabled(true);
                   webView.getSettings().setAllowFileAccess(true);
-
                   webView.setWebViewClient(new WebViewClient() {
                       @Override
-                      public boolean shouldOverrideUrlLoading(
-                              WebView view, String url) {
-                          if (url.startsWith("file:///")) {
-                              return false;
-                          }
+                      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                          if (url.startsWith("file:///")) return false;
                           try {
-                              startActivity(new Intent(
-                                  Intent.ACTION_VIEW, Uri.parse(url)));
-                          } catch (Exception ignored) {
-                          }
+                              startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                          } catch (Exception ignored) { }
                           return true;
                       }
                   });
-
                   setContentView(webView);
                   webView.loadUrl("file:///android_asset/index.html");
               }
 
               @Override
               public void onBackPressed() {
-                  if (webView.canGoBack()) {
-                      webView.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
+                  if (webView.canGoBack()) webView.goBack();
+                  else super.onBackPressed();
               }
           }
           EOF
@@ -172,17 +159,32 @@ jobs:
           gradle-version: '8.9'
           arguments: assembleDebug
 
+      - name: Prepare direct-download APK
+        shell: bash
+        run: |
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk STO-Smeta.apk
+          sha256sum STO-Smeta.apk | tee STO-Smeta.apk.sha256
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Smeta-STO-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            STO-Smeta.apk
+            STO-Smeta.apk.sha256
           if-no-files-found: error
+          retention-days: 30
 
-      - name: Publish APK release
+      - name: Publish direct APK download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Smeta СТО v1.0.${{ github.run_number }}
-          files: app/build/outputs/apk/debug/app-debug.apk
+          name: Смета СТО v1.0.${{ github.run_number }}
+          target_commitish: main
+          files: |
+            STO-Smeta.apk
+            STO-Smeta.apk.sha256
+          fail_on_unmatched_files: true
+          make_latest: true
           generate_release_notes: true
