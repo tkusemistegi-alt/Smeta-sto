@@ -189,9 +189,9 @@ $('lang').onchange=e=>{
 };
 
 function calc(){
-  const rate=num(S.rate), markup=num(S.markup,0,10000), discount=num(S.disc,0,100), vat=num(S.vat,0,100);
-  const w=S.works.reduce((a,r)=>a+num(r.h,0,10000)*rate,0);
-  const rawParts=S.parts.reduce((a,r)=>a+num(r.q,0,100000)*num(r.p),0);
+  const markup=num(S.markup,0,10000), discount=num(S.disc,0,100), vat=num(S.vat,0,100);
+  const w=S.works.reduce((a,r)=>a+workCost(r),0);
+  const rawParts=S.parts.reduce((a,r)=>a+partRaw(r),0);
   const p=rawParts*(1+markup/100);
   const sub=w+p, d=sub*discount/100, base=sub-d;
   const v=S.vatOn?base*vat/100:0;
