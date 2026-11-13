@@ -22,7 +22,7 @@ const partsMatch = js.match(/const PARTS=(\{[\s\S]*?\});/);
 assert(catMatch, 'Service catalog not found');
 assert(partsMatch, 'Parts catalog not found');
 const CAT = vm.runInNewContext(catMatch[1]);
-const PARTS = vm.runInNewContext(partsMatch[1]);
+const PARTS = vm.runInNewContext('(' + partsMatch[1] + ')');
 assert.equal(CAT.length, 11, 'Expected the original 11 predefined services');
 assert.equal(PARTS.ru.length, 8, 'Expected 8 Russian parts suggestions');
 assert.equal(PARTS.en.length, 8, 'Expected 8 English parts suggestions');
