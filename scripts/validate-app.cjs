@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const { JSDOM } = require('jsdom');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
@@ -90,6 +91,63 @@ assert(js.includes("ST.set('estimates',JSON.stringify(a))"),
   'Saving estimates must remain enabled');
 assert(js.includes("S=Object.assign(blank(),f)"),
   'Opening saved estimates must remain enabled');
+
+
+const dom = new JSDOM(html, {
+  url: 'https://example.test/',
+  runScripts: 'dangerously',
+  pretendToBeVisual: true,
+  beforeParse(window) {
+    window.scrollTo = () => {};
+    window.print = () => {};
+  }
+});
+const w = dom.window;
+const $ = id => w.document.getElementById(id);
+const fire = (element, type) => element.dispatchEvent(new w.Event(type, { bubbles: true }));
+assert.equal($('cat').options.length, 13, 'The service selector must show 11 services plus two controls');
+assert.equal($('pl').options.length, 8, 'Russian parts suggestions must be visible at startup');
+
+$('cat').value = '0';
+fire($('cat'), 'change');
+assert.equal($('works').querySelectorAll('[data-f="name"]').length, 1, 'Selecting a service must add a work row');
+assert.equal($('works').querySelector('[data-f="h"]').value, '0.7', 'Service labor hours must be prefilled');
+
+$('rate').value = '10000';
+fire($('rate'), 'input');
+$('addPart').click();
+const partName = $('parts').querySelector('[data-f="name"]');
+const partQty = $('parts').querySelector('[data-f="q"]');
+const partPrice = $('parts').querySelector('[data-f="p"]');
+partName.value = 'Масляный фильтр'; fire(partName, 'input');
+partQty.value = '2'; fire(partQty, 'input');
+partPrice.value = '1000'; fire(partPrice, 'input');
+$('markup').value = '10'; fire($('markup'), 'input');
+$('disc').value = '10'; fire($('disc'), 'input');
+$('vat').value = '16'; fire($('vat'), 'input');
+$('vatOn').checked = true; fire($('vatOn'), 'change');
+assert($('tT').textContent.replace(/\s/g, '').includes('9605'), 'Mixed labor/parts/markup/discount/VAT total must be 9,605 KZT');
+
+$('cat').value = 'x'; fire($('cat'), 'change');
+const customWork = [...$('works').querySelectorAll('[data-f="name"]')].at(-1);
+customWork.value = 'Диагностика электрики'; fire(customWork, 'input');
+assert.equal($('works').querySelectorAll('[data-f="name"]').length, 2, 'Other service must add an editable work row');
+
+$('save').click();
+assert.equal($('saved').querySelectorAll('[data-open]').length, 1, 'Save must create a saved estimate');
+$('newEst').click();
+assert.equal($('works').querySelectorAll('[data-f="name"]').length, 0, 'New estimate must clear work rows');
+$('saved').querySelector('[data-open]').click();
+assert.equal($('works').querySelectorAll('[data-f="name"]').length, 2, 'Opening a saved estimate must restore work rows');
+assert.equal($('parts').querySelectorAll('[data-f="name"]').length, 1, 'Opening a saved estimate must restore parts');
+
+$('lang').value = 'en'; fire($('lang'), 'change');
+assert.equal($('pl').options[0].value, 'Engine oil 5W-30, 4 L', 'Language switch must update parts suggestions');
+assert([...$('cat').options].some(o => o.textContent === 'Computer diagnostics'), 'Language switch must translate service catalog');
+assert.equal($('works').querySelectorAll('[data-f="name"]').length, 2, 'Language switch must preserve estimate rows');
+
+dom.window.close();
+console.log('PASS: real DOM smoke test (service/part entry, totals, save/open, RU/EN)');
 
 console.log('PASS: JavaScript syntax');
 console.log('PASS: required UI elements');
