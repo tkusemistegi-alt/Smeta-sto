@@ -180,7 +180,7 @@ function catSel(){
   $('cat').innerHTML='<option value="">'+t('Выберите…')+'</option>'+CAT.map((c,i)=>`<option value="${i}">${c[ix]}</option>`).join('')+'<option value="x">'+t('Другая услуга…')+'</option>';
 }
 tagStatic();applyLang();catSel();
-$('cur').addEventListener('change',e=>{S.cur=e.target.value==='USD'?'USD':'KZT';paint();});
+$('cur').addEventListener('change',e=>{S.cur=e.target.value==='USD'?'USD':'KZT';rows();});
 $('lang').onchange=e=>{
   L=e.target.value==='en'?'en':'ru';ST.set('lang',L);
   const ni=L==='en'?2:0;
@@ -240,8 +240,8 @@ document.addEventListener('click',e=>{
   const d=btn.dataset;
   if(d.dw!==undefined){S.works.splice(d.dw,1);rows()}
   if(d.dp!==undefined){S.parts.splice(d.dp,1);rows()}
-  if(d.open){let a=JSON.parse(ST.get('estimates')||'[]');const f=a.find(x=>String(x.id)===d.open);if(f){S=Object.assign(blank(),f);rows();scrollTo(0,0);toast('Смета открыта')}}
-  if(d.del){let a=JSON.parse(ST.get('estimates')||'[]').filter(x=>String(x.id)!==d.del);ST.set('estimates',JSON.stringify(a));list();toast('Смета удалена')}
+  if(d.open){let a=JSON.parse(ST.get('estimates')||'[]');const f=a.find(x=>String(x.id)===d.open);if(f){S=Object.assign(blank(),f);rows();scrollTo(0,0);toast(t('Смета открыта'))}}
+  if(d.del){let a=JSON.parse(ST.get('estimates')||'[]').filter(x=>String(x.id)!==d.del);ST.set('estimates',JSON.stringify(a));list();toast(t('Смета удалена'))}
 });
 $('save').onclick=()=>{
   let a=[];try{a=JSON.parse(ST.get('estimates')||'[]')}catch(e){}
