@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Смета автосервиса</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#12384f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#eef1f4;--sf:#fff;--ink:#14202b;--mute:#5d6b78;--line:#d3dae1;--ac:#1f5f8b;--acT:#fff;--bar:#12384f;--barT:#fff;--hi:#f2b705;--bad:#b3261e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151b;--sf:#16212a;--ink:#e8eef3;--mute:#93a3b1;--line:#2a3945;--ac:#5aa9d9;--acT:#08202e;--bar:#0a2536;--barT:#e8eef3;--hi:#f2c23a;--bad:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e151b;--sf:#16212a;--ink:#e8eef3;--mute:#93a3b1;--line:#2a3945;--ac:#5aa9d9;--acT:#08202e;--bar:#0a2536;--barT:#e8eef3;--hi:#f2c23a;--bad:#ff8a80;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "IBM Plex Sans",system-ui,sans-serif;padding-bottom:110px}
+main{max-width:720px;margin:0 auto;padding:18px 16px}
+h1{font-size:26px;line-height:1.15;margin:4px 0 2px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:0 0 18px}
+section{background:var(--sf);border:1px solid var(--line);border-left:5px solid var(--ac);border-radius:4px;padding:14px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 10px;font-weight:600}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:3px}
+textarea{resize:vertical}input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:10px;min-height:44px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g1{display:grid;gap:10px;margin-bottom:10px}
+.row{border-top:1px dashed var(--line);padding:10px 0;display:grid;gap:8px}
+.row:first-of-type{border-top:0}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
+.sum{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.rh{display:flex;gap:8px}.rh input:first-child{flex:1}
+button{font:inherit;cursor:pointer;border-radius:4px;border:1px solid var(--ac);background:transparent;color:var(--ac);padding:10px 14px;min-height:44px;font-weight:500}
+button.p{background:var(--ac);color:var(--acT)}
+button.x{border-color:var(--line);color:var(--bad);padding:0 12px;min-width:44px}
+.act{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tot div{display:flex;justify-content:space-between;padding:6px 0;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line)}
+.tot div.big{border:0;font-size:20px;font-weight:700;padding-top:10px}
+.chk{display:flex;gap:10px;align-items:center;margin-top:10px}.chk input{width:22px;min-height:22px}.chk label{margin:0;color:var(--ink);font-size:15px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bar);color:var(--barT);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:5}
+.bar .in{max-width:720px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar small{opacity:.75;display:block;font-size:12px}.bar b{font-size:24px;color:var(--hi);font-variant-numeric:tabular-nums}
+.bar button{background:var(--hi);border-color:var(--hi);color:#1b1500;font-weight:600}
+.saved{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px dashed var(--line)}
+.saved:first-of-type{border-top:0}.saved span{font-size:14px;color:var(--mute)}
+.empty{color:var(--mute);margin:4px 0}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90%}
+#toast.on{opacity:1}
+@media print{.bar,.noprint,#toast{display:none!important}body{background:#fff;color:#000;padding:0}section{border:1px solid #999}}
+</style>
+</head>
+<body>
+<main>
+<h1>Смета на ремонт автомобиля</h1>
+<p class="sub" id="meta"></p>
+<div class="act noprint" style="margin:0 0 14px"><select id="lang" aria-label="Language" style="width:auto"><option value="ru">Русский</option><option value="en">English</option></select><button id="inst" class="p" hidden>Установить приложение</button></div>
+
+<section><h2>Автосервис</h2><div class="g2"><div><label for="shop">Название</label><input id="shop" data-k="shop" placeholder="СТО «Мастер»"></div><div><label for="shopPhone">Телефон сервиса</label><input id="shopPhone" data-k="shopPhone" inputmode="tel"></div></div><div style="margin-top:10px"><label for="cur">Валюта сметы</label><select id="cur" data-k="cur"><option value="KZT">Тенге (₸)</option><option value="USD">Доллар ($)</option></select></div></section>
+
+<section>
+<h2>Клиент и автомобиль</h2>
+<div class="g1">
+<div><label for="client">Имя клиента</label><input id="client" data-k="client" autocomplete="off"></div>
+<div class="g2">
+<div><label for="phone">Телефон (WhatsApp)</label><input id="phone" data-k="phone" inputmode="tel" placeholder="+7 7XX XXX XX XX"></div>
+<div><label for="plate">Госномер</label><input id="plate" data-k="plate" autocapitalize="characters"></div>
+</div>
+<div><label for="car">Марка и модель</label><input id="car" data-k="car" placeholder="Toyota Camry, 2015"></div>
+</div>
+</section>
+
+<section>
+<h2>Услуги и работа мастера</h2>
+<div class="g2" style="margin-bottom:6px">
+<div><label for="rate" id="rateL">Стоимость нормо-часа, ₸</label><input id="rate" type="number" inputmode="decimal" step="any" min="0" data-k="rate"></div>
+<div><label for="cat">Добавить услугу</label><select id="cat"></select></div>
+</div>
+<div id="works"></div>
+<p class="empty" id="w0">Выберите услугу из списка: нормо-часы подставятся сами.</p>
+</section>
+
+<section>
+<h2>Запчасти и материалы</h2>
+<div id="parts"></div>
+<p class="empty" id="p0">Пока ничего не добавлено.</p>
+<div class="act noprint"><button id="addPart">Добавить запчасть</button></div>
+<datalist id="pl"><option value="Масло моторное 5W-30, 4 л"><option value="Масляный фильтр"><option value="Воздушный фильтр"><option value="Салонный фильтр"><option value="Колодки тормозные, комплект"><option value="Свечи зажигания"><option value="Антифриз, 5 л"><option value="Ремень ГРМ, комплект"></datalist>
+</section>
+
+<section>
+<h2>Итоговая смета</h2>
+<div class="g2">
+<div><label for="disc">Скидка, %</label><input id="disc" type="number" inputmode="decimal" min="0" max="100" data-k="disc"></div>
+<div><label for="vat">Ставка НДС, %</label><input id="vat" type="number" inputmode="decimal" min="0" data-k="vat"></div>
+</div>
+<div class="g1" style="margin-top:10px"><div><label for="markup">Наценка на запчасти, %</label><input id="markup" type="number" inputmode="decimal" min="0" data-k="markup"></div><div><label for="note">Комментарий и срок действия сметы</label><textarea id="note" data-k="note" rows="2" placeholder="Смета действительна 7 дней"></textarea></div></div>
+<div class="chk"><input type="checkbox" id="vatOn"><label for="vatOn">Добавить НДС сверху</label></div>
+<div class="tot" style="margin-top:10px">
+<div><span>Работа мастера</span><span id="tW"></span></div>
+<div><span>Запчасти и материалы</span><span id="tP"></span></div>
+<div><span>Скидка</span><span id="tD"></span></div>
+<div><span>НДС</span><span id="tV"></span></div>
+<div hidden><span>Округление</span><span id="tR"></span></div>
+<div class="big"><span>К оплате</span><span id="tT"></span></div>
+</div>
+</section>
+
+<section class="noprint"><h2>Отправить клиенту</h2><div class="act"><button id="bWa" class="p">WhatsApp</button><button id="bTg">Telegram</button><button id="bMail">Почта</button><button id="bCopy">Копировать</button><button id="bPrint">Печать / PDF</button></div></section>
+
+<section class="noprint">
+<h2>Сохранённые сметы</h2>
+<div id="saved"></div>
+<div class="act"><button id="newEst">Новая смета</button></div>
+</section>
+</main>
+
+<div class="bar noprint"><div class="in">
+<div><small>К оплате</small><b id="barT"></b></div>
+<div class="act" style="margin:0"><button id="save" class="p" style="background:transparent;color:var(--barT);border-color:var(--barT)">Сохранить</button><button id="send">Отправить</button></div>
+</div></div>
+<div id="toast" role="status"></div>
+
+<script>
+const CAT=[["Компьютерная диагностика",0.7,"Computer diagnostics"],["Замена масла и фильтра",0.5,"Oil and filter change"],["Замена тормозных колодок (ось)",1,"Brake pad replacement (axle)"],["Диагностика ходовой",0.8,"Suspension diagnostics"],["Замена ремня ГРМ",3,"Timing belt replacement"],["Замена свечей зажигания",0.6,"Spark plug replacement"],["Развал-схождение",1,"Wheel alignment"],["Шиномонтаж (4 колеса)",1,"Tire fitting (4 wheels)"],["Замена аккумулятора",0.3,"Battery replacement"],["Заправка кондиционера",1,"A/C recharge"],["Замена амортизаторов (ось)",2,"Shock absorber replacement (axle)"]];
+const $=id=>document.getElementById(id);
+const ST={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
+const EN={
+'Смета автосервиса':'Auto Repair Estimate','Смета на ремонт автомобиля':'Car Repair Estimate','Установить приложение':'Install app',
+'Автосервис':'Service station','Название':'Name','СТО «Мастер»':'Master Auto Service','Телефон сервиса':'Service phone',
+'Валюта сметы':'Estimate currency','Тенге (₸)':'Tenge (₸)','Доллар ($)':'US dollar ($)',
+'Клиент и автомобиль':'Client and vehicle','Имя клиента':'Client name','Телефон (WhatsApp)':'Phone (WhatsApp)','Госномер':'License plate','Марка и модель':'Make and model',
+'Услуги и работа мастера':'Services and labor','Стоимость нормо-часа,':'Labor rate per hour,','Добавить услугу':'Add service',
+'Выберите услугу из списка: нормо-часы подставятся сами.':'Pick a service from the list: labor hours fill in automatically.',
+'Запчасти и материалы':'Parts and materials','Пока ничего не добавлено.':'Nothing added yet.','Добавить запчасть':'Add part',
+'Итоговая смета':'Estimate total','Скидка, %':'Discount, %','Ставка НДС, %':'VAT rate, %','Наценка на запчасти, %':'Parts markup, %',
+'Комментарий и срок действия сметы':'Notes and validity period','Смета действительна 7 дней':'Estimate valid for 7 days','Добавить НДС сверху':'Add VAT on top',
+'Работа мастера':'Labor','Скидка':'Discount','НДС':'VAT','Округление':'Rounding','К оплате':'Total due',
+'Отправить клиенту':'Send to client','Почта':'Email','Копировать':'Copy','Печать / PDF':'Print / PDF',
+'Сохранённые сметы':'Saved estimates','Новая смета':'New estimate','Сохранить':'Save','Отправить':'Send',
+'Выберите…':'Select…','Другая услуга…':'Other service…','Услуга':'Service','Удалить услугу':'Delete service','Запчасть':'Part','Удалить запчасть':'Delete part','Удалить смету':'Delete estimate',
+'Нормо-часы':'Labor hours','Стоимость':'Cost','Кол-во':'Qty','Цена,':'Price,',
+'без имени':'no name','авто не указано':'vehicle not specified','Открыть':'Open','Сохранённых смет пока нет.':'No saved estimates yet.',
+'не включён':'not included',
+'Смета открыта':'Estimate opened','Смета удалена':'Estimate deleted','Смета сохранена':'Estimate saved','Не удалось сохранить в этом браузере':'Could not save in this browser',
+'Добавьте услуги или запчасти':'Add services or parts','Открываем WhatsApp':'Opening WhatsApp','Телефон не указан: смета скопирована':'No phone number: estimate copied',
+'Укажите телефон клиента':"Enter the client's phone",'Печать недоступна: скопируйте смету':'Printing unavailable: copy the estimate',
+'Смета скопирована':'Estimate copied','Не удалось скопировать':'Could not copy','Приложение установлено':'App installed',
+'Смета':'Estimate',' от ':', ',', тел. ':', tel. ','Клиент':'Client','Автомобиль':'Vehicle','Работы:':'Services:','ч':'h','Позиция':'Item','наценка':'markup',
+'Работа':'Labor','Запчасти':'Parts','с наценкой':'with markup'
+};
+let L=ST.get('lang')==='en'?'en':'ru';
+const t=k=>L==='en'?(EN[k]!==undefined?EN[k]:k):k;
+const LOC=()=>L==='en'?'en-US':'ru-RU';
+const PARTS={ru:['Масло моторное 5W-30, 4 л','Масляный фильтр','Воздушный фильтр','Салонный фильтр','Колодки тормозные, комплект','Свечи зажигания','Антифриз, 5 л','Ремень ГРМ, комплект'],en:['Engine oil 5W-30, 4 L','Oil filter','Air filter','Cabin filter','Brake pads, set','Spark plugs','Antifreeze, 5 L','Timing belt kit']};
+const num=(v,min=0,max=1e12)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):0};
+const rd=n=>S.cur==='USD'?Math.round(n*100)/100:Math.round(n);
+const sym=()=>S.cur==='USD'?'$':'₸';
+const fmt=n=>{n=Number(n);const v=rd(Number.isFinite(n)?n:0),u=S.cur==='USD',s=Math.abs(v).toLocaleString(LOC(),u?{minimumFractionDigits:2,maximumFractionDigits:2}:{}),r=L==='en'?(u?'$':'₸')+s:s+(u?' $':' ₸');return v<0?'−'+r:r};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const blank=()=>({id:Date.now(),num:'№'+String(Date.now()).slice(-6),date:(()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString()})(),client:'',phone:'',plate:'',car:'',rate:8000,works:[],parts:[],disc:0,vat:16,vatOn:false,shop:'',shopPhone:'',markup:0,note:'',cur:'KZT'});
+let S=blank();
+try{const d=JSON.parse(ST.get('draft')||'null');if(d&&d.works)S=Object.assign(blank(),d)}catch(e){}
+let toastT;const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)};
+
+function tagStatic(){
+  document.querySelectorAll('h1,h2,label,button,span,small,option,p').forEach(e=>{if(!e.children.length){const x=e.textContent.trim();if(EN[x]!==undefined)e.dataset.ru=x}});
+  document.querySelectorAll('[placeholder]').forEach(e=>{if(EN[e.placeholder]!==undefined)e.dataset.phru=e.placeholder});
+}
+function applyLang(){
+  document.documentElement.lang=L;document.title=t('Смета автосервиса');
+  document.querySelectorAll('[data-ru]').forEach(e=>e.textContent=t(e.dataset.ru));
+  document.querySelectorAll('[data-phru]').forEach(e=>e.placeholder=t(e.dataset.phru));
+  $('pl').innerHTML=PARTS[L].map(x=>'<option value="'+esc(x)+'">').join('');
+  $('lang').value=L;
+}
+function catSel(){
+  const ix=L==='en'?2:0;
+  $('cat').innerHTML='<option value="">'+t('Выберите…')+'</option>'+CAT.map((c,i)=>`<option value="${i}">${c[ix]}</option>`).join('')+'<option value="x">'+t('Другая услуга…')+'</option>';
+}
+tagStatic();applyLang();catSel();
+$('lang').onchange=e=>{
+  L=e.target.value==='en'?'en':'ru';ST.set('lang',L);
+  const ni=L==='en'?2:0;
+  S.works.forEach(r=>{if(r.ci!=null&&CAT[r.ci]&&(r.name===CAT[r.ci][0]||r.name===CAT[r.ci][2]))r.name=CAT[r.ci][ni]});
+  applyLang();catSel();rows();
+};
+
+function calc(){
+  const rate=num(S.rate), markup=num(S.markup,0,10000), discount=num(S.disc,0,100), vat=num(S.vat,0,100);
+  const w=S.works.reduce((a,r)=>a+num(r.h,0,10000)*rate,0);
+  const rawParts=S.parts.reduce((a,r)=>a+num(r.q,0,100000)*num(r.p),0);
+  const p=rawParts*(1+markup/100);
+  const sub=w+p, d=sub*discount/100, base=sub-d;
+  const v=S.vatOn?base*vat/100:0;
+  const t=rd(base+v);
+  const shown=rd(w)+rd(p)-rd(d)+(S.vatOn?rd(v):0);
+  const rounding=rd(t-shown);
+  return {w,p,rawParts,markup,d,v,t,rounding};
+}
+function paint(){
+  const c=calc();
+  $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):fmt(0);$('tV').textContent=S.vatOn?fmt(c.v):t('не включён');$('tR').textContent=(c.rounding>0?'+':'')+fmt(c.rounding);$('tR').parentElement.hidden=c.rounding===0;$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
+  S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt((+r.h||0)*(+S.rate||0))});
+  S.parts.forEach((r,i)=>{const e=$('ps'+i);if(e){const raw=num(r.q)*num(r.p);e.textContent=fmt(raw*(1+c.markup/100))}});
+  ST.set('draft',JSON.stringify(S));
+}
+function rows(){
+  $('meta').textContent=t('Смета')+' '+S.num+t(' от ')+new Date(S.date).toLocaleDateString(LOC());
+  if(S.cur!=='USD')S.cur='KZT';
+  document.querySelectorAll('[data-k]').forEach(e=>e.value=S[e.dataset.k]);
+  $('rateL').textContent=t('Стоимость нормо-часа,')+' '+sym();
+  $('vatOn').checked=S.vatOn;
+  $('w0').style.display=S.works.length?'none':'';$('p0').style.display=S.parts.length?'none':'';
+  $('works').innerHTML=S.works.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="${t('Услуга')}" data-w="${i}" data-f="name" value="${esc(r.name)}"><button class="x noprint" data-dw="${i}" aria-label="${t('Удалить услугу')}">✕</button></div><div class="g2"><div><label>${t('Нормо-часы')}</label><input type="number" step="0.1" min="0" inputmode="decimal" data-w="${i}" data-f="h" value="${r.h}"></div><div><label>${t('Стоимость')}</label><div class="sum" id="ws${i}" style="padding:10px 0"></div></div></div></div>`).join('');
+  $('parts').innerHTML=S.parts.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="${t('Запчасть')}" list="pl" data-p="${i}" data-f="name" value="${esc(r.name)}" placeholder="${t('Название')}"><button class="x noprint" data-dp="${i}" aria-label="${t('Удалить запчасть')}">✕</button></div><div class="r3"><div><label>${t('Кол-во')}</label><input type="number" min="0" inputmode="decimal" data-p="${i}" data-f="q" value="${r.q}"></div><div><label>${t('Цена,')} ${sym()}</label><input type="number" min="0" step="any" inputmode="decimal" data-p="${i}" data-f="p" value="${r.p}"></div><div class="sum" id="ps${i}" style="padding-bottom:12px"></div></div></div>`).join('');
+  paint();list();
+}
+function list(){
+  let a=[];try{a=JSON.parse(ST.get('estimates')||'[]')}catch(e){}
+  $('saved').innerHTML=a.length?a.map(s=>`<div class="saved"><div><b>${esc(s.num)}</b> ${esc(s.client||t('без имени'))}<br><span>${esc(s.car||t('авто не указано'))}</span></div><div class="act" style="margin:0"><button data-open="${s.id}">${t('Открыть')}</button><button class="x" data-del="${s.id}" aria-label="${t('Удалить смету')}">✕</button></div></div>`).join(''):'<p class="empty">'+t('Сохранённых смет пока нет.')+'</p>';
+}
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='cur'){S.cur=t.value==='USD'?'USD':'KZT';rows();return}
+  if(t.dataset.k){S[t.dataset.k]=t.type==='number'?String(num(t.value,0,t.id==='disc'||t.id==='vat'?100:1e12)):t.value;paint()}
+  else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):t.value;paint()}
+  else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=['q','p'].includes(t.dataset.f)?String(num(t.value,0,1e12)):t.value;paint()}
+  else if(t.id==='vatOn'){S.vatOn=t.checked;paint()}
+});
+$('vatOn').addEventListener('change',e=>{S.vatOn=e.target.checked;paint()});
+$('cat').onchange=e=>{
+  const v=e.target.value;if(!v)return;
+  S.works.push(v==='x'?{name:'',h:1}:{name:CAT[v][L==='en'?2:0],h:CAT[v][1],ci:+v});
+  e.target.value='';rows();
+};
+$('addPart').onclick=()=>{S.parts.push({name:'',q:1,p:0});rows()};
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  const d=t.dataset;
+  if(d.dw!==undefined){S.works.splice(d.dw,1);rows()}
+  if(d.dp!==undefined){S.parts.splice(d.dp,1);rows()}
+  if(d.open){let a=JSON.parse(ST.get('estimates')||'[]');const f=a.find(x=>String(x.id)===d.open);if(f){S=Object.assign(blank(),f);rows();scrollTo(0,0);toast(t('Смета открыта'))}}
+  if(d.del){let a=JSON.parse(ST.get('estimates')||'[]').filter(x=>String(x.id)!==d.del);ST.set('estimates',JSON.stringify(a));list();toast(t('Смета удалена'))}
+});
+$('save').onclick=()=>{
+  let a=[];try{a=JSON.parse(ST.get('estimates')||'[]')}catch(e){}
+  a=a.filter(x=>x.id!==S.id);a.unshift(JSON.parse(JSON.stringify(S)));
+  toast(ST.set('estimates',JSON.stringify(a))?t('Смета сохранена'):t('Не удалось сохранить в этом браузере'));list();
+};
+$('newEst').onclick=()=>{S=blank();rows();scrollTo(0,0)};
+function text(){
+  const c=calc(),dt=new Date(S.date).toLocaleDateString(LOC());
+  let o=(S.shop?S.shop+(S.shopPhone?t(', тел. ')+S.shopPhone:'')+'\n':'')+t('Смета')+' '+S.num+t(' от ')+dt+'\n';
+  if(S.client)o+=t('Клиент')+': '+S.client+'\n';
+  if(S.car)o+=t('Автомобиль')+': '+S.car+(S.plate?' ('+S.plate+')':'')+'\n';
+  if(S.works.length){o+='\n'+t('Работы:')+'\n'+S.works.map(r=>'• '+(r.name||t('Услуга'))+' — '+r.h+' '+t('ч')+' × '+fmt(S.rate)+' = '+fmt((+r.h||0)*(+S.rate||0))).join('\n')+'\n'}
+  if(S.parts.length){o+='\n'+t('Запчасти и материалы')+':\n'+S.parts.map(r=>{const raw=num(r.q)*num(r.p),total=raw*(1+c.markup/100);return '• '+(r.name||t('Позиция'))+' — '+r.q+' × '+fmt(r.p)+(c.markup>0?' + '+t('наценка')+' '+c.markup+'%':'')+' = '+fmt(total)}).join('\n')+'\n'}
+  o+='\n'+t('Работа')+': '+fmt(c.w)+'\n'+t('Запчасти')+(+S.markup>0?' ('+t('с наценкой')+' '+S.markup+'%)':'')+': '+fmt(c.p)+'\n';
+  if(c.d)o+=t('Скидка')+': −'+fmt(c.d)+'\n';
+  if(S.vatOn)o+=t('НДС')+' '+S.vat+'%: '+fmt(c.v)+'\n';
+  if(c.rounding)o+=t('Округление')+': '+(c.rounding>0?'+':'')+fmt(c.rounding)+'\n';
+  return o+t('К оплате')+': '+fmt(c.t)+(S.note?'\n\n'+S.note:'');
+}
+async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
+$('send').onclick=async()=>{
+  if(!S.works.length&&!S.parts.length){toast(t('Добавьте услуги или запчасти'));return}
+  const t=text();
+  let d=(S.phone||'').replace(/\D/g,'');if(d.length===11&&d[0]==='8')d='7'+d.slice(1);
+  if(d.length>=10){
+    const a=document.createElement('a');a.href='https://wa.me/'+d+'?text='+encodeURIComponent(t);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+    toast(t('Открываем WhatsApp'));return;
+  }
+  if(navigator.share){try{await navigator.share({title:t('Смета')+' '+S.num,text:t});return}catch(e){}}
+  toast(await copy(t)?t('Телефон не указан: смета скопирована'):t('Укажите телефон клиента'));
+};
+const open=u=>{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
+$('bPrint').onclick=()=>{try{print()}catch(e){toast(t('Печать недоступна: скопируйте смету'))}};
+$('bCopy').onclick=async()=>toast(await copy(text())?t('Смета скопирована'):t('Не удалось скопировать'));
+$('bTg').onclick=()=>open('https://t.me/share/url?url=%20&text='+encodeURIComponent(text()));
+$('bMail').onclick=()=>open('mailto:?subject='+encodeURIComponent(t('Смета')+' '+S.num)+'&body='+encodeURIComponent(text()));
+$('bWa').onclick=()=>$('send').onclick();
+let dp;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('inst').hidden=false});
+$('inst').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$('inst').hidden=true};
+addEventListener('appinstalled',()=>{$('inst').hidden=true;toast(t('Приложение установлено'))});
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+rows();
+</script>
+</body>
+</html>
