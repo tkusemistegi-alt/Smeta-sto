@@ -172,29 +172,12 @@ function applyLang(){
   document.documentElement.lang=L;document.title=t('Смета автосервиса');
   document.querySelectorAll('[data-ru]').forEach(e=>e.textContent=t(e.dataset.ru));
   document.querySelectorAll('[data-phru]').forEach(e=>e.placeholder=t(e.dataset.phru));
-  partsList();
+  $('pl').innerHTML=PARTS[L].map(x=>'<option value="'+esc(x)+'">').join('');
   $('lang').value=L;
-}
-const CUSTOM_SERVICES_KEY='smeta_custom_services_v1',CUSTOM_PARTS_KEY='smeta_custom_parts_v1';
-function readNames(key){
-  try{const a=JSON.parse(ST.get(key)||'[]');return Array.isArray(a)?[...new Set(a.filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim()))]:[]}catch(e){return []}
-}
-let customServices=readNames(CUSTOM_SERVICES_KEY),customParts=readNames(CUSTOM_PARTS_KEY);
-function rememberName(key,list,value){
-  const name=String(value||'').trim();if(!name)return;
-  if(!list.some(x=>x.toLocaleLowerCase()===name.toLocaleLowerCase())){
-    list.push(name);ST.set(key,JSON.stringify(list));
-  }
 }
 function catSel(){
   const ix=L==='en'?2:0;
-  $('cat').innerHTML='<option value="">'+t('Выберите…')+'</option>'+CAT.map((c,i)=>`<option value="${i}">${c[ix]}</option>`).join('')+
-    customServices.map((name,i)=>`<option value="custom:${i}">${esc(name)}</option>`).join('')+
-    '<option value="x">'+t('Другая услуга…')+'</option>';
-}
-function partsList(){
-  const names=[...PARTS[L],...customParts];
-  $('pl').innerHTML=[...new Set(names)].map(x=>'<option value="'+esc(x)+'">').join('');
+  $('cat').innerHTML='<option value="">'+t('Выберите…')+'</option>'+CAT.map((c,i)=>`<option value="${i}">${c[ix]}</option>`).join('')+'<option value="x">'+t('Другая услуга…')+'</option>';
 }
 tagStatic();applyLang();catSel();
 $('cur').addEventListener('change',e=>{S.cur=e.target.value==='USD'?'USD':'KZT';rows();});
@@ -241,16 +224,14 @@ function list(){
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.dataset.k){S[t.dataset.k]=t.type==='number'?String(num(t.value,0,t.id==='disc'||t.id==='vat'?100:t.id==='markup'?10000:1e12)):t.value;paint()}
-  else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):t.value;if(t.dataset.f==='name'&&S.works[t.dataset.w].ci==null){rememberName(CUSTOM_SERVICES_KEY,customServices,t.value);catSel()}paint()}
-  else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=t.dataset.f==='q'?String(num(t.value,0,100000)):t.dataset.f==='p'?String(num(t.value,0,1e12)):t.value;if(t.dataset.f==='name'){rememberName(CUSTOM_PARTS_KEY,customParts,t.value);partsList()}paint()}
+  else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):t.value;paint()}
+  else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=t.dataset.f==='q'?String(num(t.value,0,100000)):t.dataset.f==='p'?String(num(t.value,0,1e12)):t.value;paint()}
   else if(t.id==='vatOn'){S.vatOn=t.checked;paint()}
 });
 $('vatOn').addEventListener('change',e=>{S.vatOn=e.target.checked;paint()});
 $('cat').onchange=e=>{
   const v=e.target.value;if(!v)return;
-  if(v==='x')S.works.push({name:'',h:1});
-  else if(v.startsWith('custom:'))S.works.push({name:customServices[Number(v.slice(7))]||'',h:1});
-  else S.works.push({name:CAT[v][L==='en'?2:0],h:CAT[v][1],ci:+v});
+  S.works.push(v==='x'?{name:'',h:1}:{name:CAT[v][L==='en'?2:0],h:CAT[v][1],ci:+v});
   e.target.value='';rows();
 };
 $('addPart').onclick=()=>{S.parts.push({name:'',q:1,p:0});rows()};
