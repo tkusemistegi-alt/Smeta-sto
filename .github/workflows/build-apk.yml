@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/build-apk.yml'
       - 'index.html'
+      - 'scripts/validate-app.cjs'
       - 'manifest.webmanifest'
       - 'sw.js'
       - 'icon-192.png'
@@ -24,6 +25,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Validate app JavaScript, catalogs and calculations
+        run: node scripts/validate-app.cjs
 
       - name: Setup Java
         uses: actions/setup-java@v4
