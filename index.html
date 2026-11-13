@@ -95,7 +95,7 @@ button.x{border-color:var(--line);color:var(--bad);padding:0 12px;min-width:44px
 <div><label for="disc">Скидка, %</label><input id="disc" type="number" inputmode="decimal" min="0" max="100" data-k="disc"></div>
 <div><label for="vat">Ставка НДС, %</label><input id="vat" type="number" inputmode="decimal" min="0" data-k="vat"></div>
 </div>
-<div class="g1" style="margin-top:10px"><div><label for="markup">Наценка на запчасти, %</label><input id="markup" type="number" inputmode="decimal" min="0" data-k="markup"></div><div><label for="note">Комментарий и срок действия сметы</label><textarea id="note" data-k="note" rows="2" placeholder="Смета действительна 7 дней"></textarea></div></div>
+<div class="g1" style="margin-top:10px"><div><label for="markup">Наценка на запчасти, %</label><input id="markup" type="number" inputmode="decimal" min="0" max="10000" data-k="markup"></div><div><label for="note">Комментарий и срок действия сметы</label><textarea id="note" data-k="note" rows="2" placeholder="Смета действительна 7 дней"></textarea></div></div>
 <div class="chk"><input type="checkbox" id="vatOn"><label for="vatOn">Добавить НДС сверху</label></div>
 <div class="tot" style="margin-top:10px">
 <div><span>Работа мастера</span><span id="tW"></span></div>
@@ -154,7 +154,7 @@ let L=ST.get('lang')==='en'?'en':'ru';
 const t=k=>L==='en'?(EN[k]!==undefined?EN[k]:k):k;
 const LOC=()=>L==='en'?'en-US':'ru-RU';
 const PARTS={ru:['Масло моторное 5W-30, 4 л','Масляный фильтр','Воздушный фильтр','Салонный фильтр','Колодки тормозные, комплект','Свечи зажигания','Антифриз, 5 л','Ремень ГРМ, комплект'],en:['Engine oil 5W-30, 4 L','Oil filter','Air filter','Cabin filter','Brake pads, set','Spark plugs','Antifreeze, 5 L','Timing belt kit']};
-const num=(v,min=0,max=1e12)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):0};
+const num=(v,min=0,max=1e12)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):0};\nconst workCost=r=>num(r.h,0,10000)*num(S.rate);\nconst partRaw=r=>num(r.q,0,100000)*num(r.p);\nconst partCost=r=>partRaw(r)*(1+num(S.markup,0,10000)/100);
 const rd=n=>S.cur==='USD'?Math.round(n*100)/100:Math.round(n);
 const sym=()=>S.cur==='USD'?'$':'₸';
 const fmt=n=>{n=Number(n);const v=rd(Number.isFinite(n)?n:0),u=S.cur==='USD',s=Math.abs(v).toLocaleString(LOC(),u?{minimumFractionDigits:2,maximumFractionDigits:2}:{}),r=L==='en'?(u?'$':'₸')+s:s+(u?' $':' ₸');return v<0?'−'+r:r};
@@ -203,8 +203,8 @@ function calc(){
 function paint(){
   const c=calc();
   $('tW').textContent=fmt(c.w);$('tP').textContent=fmt(c.p);$('tD').textContent=c.d?'−'+fmt(c.d):fmt(0);$('tV').textContent=S.vatOn?fmt(c.v):t('не включён');$('tR').textContent=(c.rounding>0?'+':'')+fmt(c.rounding);$('tR').parentElement.hidden=c.rounding===0;$('tT').textContent=fmt(c.t);$('barT').textContent=fmt(c.t);
-  S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt((+r.h||0)*(+S.rate||0))});
-  S.parts.forEach((r,i)=>{const e=$('ps'+i);if(e){const raw=num(r.q)*num(r.p);e.textContent=fmt(raw*(1+c.markup/100))}});
+  S.works.forEach((r,i)=>{const e=$('ws'+i);if(e)e.textContent=fmt(workCost(r))});
+  S.parts.forEach((r,i)=>{const e=$('ps'+i);if(e){e.textContent=fmt(partCost(r))}});
   ST.set('draft',JSON.stringify(S));
 }
 function rows(){
@@ -213,8 +213,8 @@ function rows(){
   $('rateL').textContent=t('Стоимость нормо-часа,')+' '+sym();
   $('vatOn').checked=S.vatOn;
   $('w0').style.display=S.works.length?'none':'';$('p0').style.display=S.parts.length?'none':'';
-  $('works').innerHTML=S.works.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="${t('Услуга')}" data-w="${i}" data-f="name" value="${esc(r.name)}"><button class="x noprint" data-dw="${i}" aria-label="${t('Удалить услугу')}">✕</button></div><div class="g2"><div><label>${t('Нормо-часы')}</label><input type="number" step="0.1" min="0" inputmode="decimal" data-w="${i}" data-f="h" value="${r.h}"></div><div><label>${t('Стоимость')}</label><div class="sum" id="ws${i}" style="padding:10px 0"></div></div></div></div>`).join('');
-  $('parts').innerHTML=S.parts.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="${t('Запчасть')}" list="pl" data-p="${i}" data-f="name" value="${esc(r.name)}" placeholder="${t('Название')}"><button class="x noprint" data-dp="${i}" aria-label="${t('Удалить запчасть')}">✕</button></div><div class="r3"><div><label>${t('Кол-во')}</label><input type="number" min="0" inputmode="decimal" data-p="${i}" data-f="q" value="${r.q}"></div><div><label>${t('Цена,')} ${sym()}</label><input type="number" min="0" step="any" inputmode="decimal" data-p="${i}" data-f="p" value="${r.p}"></div><div class="sum" id="ps${i}" style="padding-bottom:12px"></div></div></div>`).join('');
+  $('works').innerHTML=S.works.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="${t('Услуга')}" data-w="${i}" data-f="name" value="${esc(r.name)}"><button class="x noprint" data-dw="${i}" aria-label="${t('Удалить услугу')}">✕</button></div><div class="g2"><div><label>${t('Нормо-часы')}</label><input type="number" step="0.1" min="0" inputmode="decimal" data-w="${i}" data-f="h" max="10000" value="${r.h}"></div><div><label>${t('Стоимость')}</label><div class="sum" id="ws${i}" style="padding:10px 0"></div></div></div></div>`).join('');
+  $('parts').innerHTML=S.parts.map((r,i)=>`<div class="row"><div class="rh"><input aria-label="${t('Запчасть')}" list="pl" data-p="${i}" data-f="name" value="${esc(r.name)}" placeholder="${t('Название')}"><button class="x noprint" data-dp="${i}" aria-label="${t('Удалить запчасть')}">✕</button></div><div class="r3"><div><label>${t('Кол-во')}</label><input type="number" min="0" inputmode="decimal" data-p="${i}" data-f="q" max="100000" value="${r.q}"></div><div><label>${t('Цена,')} ${sym()}</label><input type="number" min="0" step="any" inputmode="decimal" data-p="${i}" data-f="p" value="${r.p}"></div><div class="sum" id="ps${i}" style="padding-bottom:12px"></div></div></div>`).join('');
   paint();list();
 }
 function list(){
@@ -223,9 +223,9 @@ function list(){
 }
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.dataset.k){S[t.dataset.k]=t.type==='number'?String(num(t.value,0,t.id==='disc'||t.id==='vat'?100:1e12)):t.value;paint()}
+  if(t.dataset.k){S[t.dataset.k]=t.type==='number'?String(num(t.value,0,t.id==='disc'||t.id==='vat'?100:t.id==='markup'?10000:1e12)):t.value;paint()}
   else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):t.value;paint()}
-  else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=['q','p'].includes(t.dataset.f)?String(num(t.value,0,1e12)):t.value;paint()}
+  else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=t.dataset.f==='q'?String(num(t.value,0,100000)):t.dataset.f==='p'?String(num(t.value,0,1e12)):t.value;paint()}
   else if(t.id==='vatOn'){S.vatOn=t.checked;paint()}
 });
 $('vatOn').addEventListener('change',e=>{S.vatOn=e.target.checked;paint()});
@@ -254,8 +254,8 @@ function text(){
   let o=(S.shop?S.shop+(S.shopPhone?t(', тел. ')+S.shopPhone:'')+'\n':'')+t('Смета')+' '+S.num+t(' от ')+dt+'\n';
   if(S.client)o+=t('Клиент')+': '+S.client+'\n';
   if(S.car)o+=t('Автомобиль')+': '+S.car+(S.plate?' ('+S.plate+')':'')+'\n';
-  if(S.works.length){o+='\n'+t('Работы:')+'\n'+S.works.map(r=>'• '+(r.name||t('Услуга'))+' — '+r.h+' '+t('ч')+' × '+fmt(S.rate)+' = '+fmt((+r.h||0)*(+S.rate||0))).join('\n')+'\n'}
-  if(S.parts.length){o+='\n'+t('Запчасти и материалы')+':\n'+S.parts.map(r=>{const raw=num(r.q)*num(r.p),total=raw*(1+c.markup/100);return '• '+(r.name||t('Позиция'))+' — '+r.q+' × '+fmt(r.p)+(c.markup>0?' + '+t('наценка')+' '+c.markup+'%':'')+' = '+fmt(total)}).join('\n')+'\n'}
+  if(S.works.length){o+='\n'+t('Работы:')+'\n'+S.works.map(r=>'• '+(r.name||t('Услуга'))+' — '+r.h+' '+t('ч')+' × '+fmt(S.rate)+' = '+fmt(workCost(r))).join('\n')+'\n'}
+  if(S.parts.length){o+='\n'+t('Запчасти и материалы')+':\n'+S.parts.map(r=>{const total=partCost(r);return '• '+(r.name||t('Позиция'))+' — '+r.q+' × '+fmt(r.p)+(c.markup>0?' + '+t('наценка')+' '+c.markup+'%':'')+' = '+fmt(total)}).join('\n')+'\n'}
   o+='\n'+t('Работа')+': '+fmt(c.w)+'\n'+t('Запчасти')+(+S.markup>0?' ('+t('с наценкой')+' '+S.markup+'%)':'')+': '+fmt(c.p)+'\n';
   if(c.d)o+=t('Скидка')+': −'+fmt(c.d)+'\n';
   if(S.vatOn)o+=t('НДС')+' '+S.vat+'%: '+fmt(c.v)+'\n';
