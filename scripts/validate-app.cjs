@@ -4,12 +4,12 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const html = fs.readFileSync('index.html', 'utf8');
-const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)].map(m => m[1]);
+const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
 assert.equal(scripts.length, 1, 'Expected exactly one application script');
 const js = scripts[0];
 new vm.Script(js, { filename: 'index.html:inline-script' });
 
-const ids = new Set([...html.matchAll(/\\bid="([^"]+)"/g)].map(m => m[1]));
+const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]));
 const requiredIds = [
   'meta','lang','cur','rate','cat','works','parts','pl','disc','vat','markup',
   'vatOn','tW','tP','tD','tV','tT','barT','saved','addPart','save','newEst',
@@ -17,8 +17,8 @@ const requiredIds = [
 ];
 for (const id of requiredIds) assert(ids.has(id), 'Missing required HTML element: ' + id);
 
-const catMatch = js.match(/const CAT=(\\[[\\s\\S]*?\\]);/);
-const partsMatch = js.match(/const PARTS=(\\{[\\s\\S]*?\\});/);
+const catMatch = js.match(/const CAT=(\[[\s\S]*?\]);/);
+const partsMatch = js.match(/const PARTS=(\{[\s\S]*?\});/);
 assert(catMatch, 'Service catalog not found');
 assert(partsMatch, 'Parts catalog not found');
 const CAT = vm.runInNewContext(catMatch[1]);
@@ -30,17 +30,17 @@ assert(CAT.every(x => typeof x[0] === 'string' && Number.isFinite(x[1]) && typeo
   'Every service must have Russian/English names and labor hours');
 
 const line = prefix => {
-  const value = js.split('\\n').find(x => x.startsWith(prefix));
+  const value = js.split('\n').find(x => x.startsWith(prefix));
   assert(value, 'Calculation helper missing: ' + prefix);
   return value;
 };
-const calc = js.match(/function calc\\(\\)\\{[\\s\\S]*?\\n\\}/);
+const calc = js.match(/function calc\(\)\{[\s\S]*?\n\}/);
 assert(calc, 'Calculation function missing');
 const calculationSource = [
   line('const num='), line('const workCost='), line('const partRaw='),
   line('const partCost='), line('const rd='), calc[0],
   'return state => { S = state; return calc(); };'
-].join('\\n');
+].join('\n');
 const runCalc = new Function('let S; ' + calculationSource)();
 
 const cases = [
