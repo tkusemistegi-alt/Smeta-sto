@@ -26,6 +26,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install DOM smoke-test dependency
+        run: npm install --no-save --no-package-lock jsdom@26
+
       - name: Validate app JavaScript, catalogs and calculations
         run: node scripts/validate-app.cjs
 
