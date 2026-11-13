@@ -180,6 +180,7 @@ function catSel(){
   $('cat').innerHTML='<option value="">'+t('Выберите…')+'</option>'+CAT.map((c,i)=>`<option value="${i}">${c[ix]}</option>`).join('')+'<option value="x">'+t('Другая услуга…')+'</option>';
 }
 tagStatic();applyLang();catSel();
+$('cur').addEventListener('change',e=>{S.cur=e.target.value==='USD'?'USD':'KZT';paint();});
 $('lang').onchange=e=>{
   L=e.target.value==='en'?'en':'ru';ST.set('lang',L);
   const ni=L==='en'?2:0;
@@ -208,7 +209,6 @@ function paint(){
 }
 function rows(){
   $('meta').textContent=t('Смета')+' '+S.num+t(' от ')+new Date(S.date).toLocaleDateString(LOC());
-  if(S.cur!=='USD')S.cur='KZT';
   document.querySelectorAll('[data-k]').forEach(e=>e.value=S[e.dataset.k]);
   $('rateL').textContent=t('Стоимость нормо-часа,')+' '+sym();
   $('vatOn').checked=S.vatOn;
@@ -223,7 +223,6 @@ function list(){
 }
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.id==='cur'){S.cur=t.value==='USD'?'USD':'KZT';rows();return}
   if(t.dataset.k){S[t.dataset.k]=t.type==='number'?String(num(t.value,0,t.id==='disc'||t.id==='vat'?100:1e12)):t.value;paint()}
   else if(t.dataset.w!==undefined){S.works[t.dataset.w][t.dataset.f]=t.dataset.f==='h'?String(num(t.value,0,10000)):t.value;paint()}
   else if(t.dataset.p!==undefined){S.parts[t.dataset.p][t.dataset.f]=['q','p'].includes(t.dataset.f)?String(num(t.value,0,1e12)):t.value;paint()}
@@ -237,12 +236,12 @@ $('cat').onchange=e=>{
 };
 $('addPart').onclick=()=>{S.parts.push({name:'',q:1,p:0});rows()};
 document.addEventListener('click',e=>{
-  const t=e.target.closest('button');if(!t)return;
-  const d=t.dataset;
+  const btn=e.target.closest('button');if(!btn)return;
+  const d=btn.dataset;
   if(d.dw!==undefined){S.works.splice(d.dw,1);rows()}
   if(d.dp!==undefined){S.parts.splice(d.dp,1);rows()}
-  if(d.open){let a=JSON.parse(ST.get('estimates')||'[]');const f=a.find(x=>String(x.id)===d.open);if(f){S=Object.assign(blank(),f);rows();scrollTo(0,0);toast(t('Смета открыта'))}}
-  if(d.del){let a=JSON.parse(ST.get('estimates')||'[]').filter(x=>String(x.id)!==d.del);ST.set('estimates',JSON.stringify(a));list();toast(t('Смета удалена'))}
+  if(d.open){let a=JSON.parse(ST.get('estimates')||'[]');const f=a.find(x=>String(x.id)===d.open);if(f){S=Object.assign(blank(),f);rows();scrollTo(0,0);toast('Смета открыта')}}
+  if(d.del){let a=JSON.parse(ST.get('estimates')||'[]').filter(x=>String(x.id)!==d.del);ST.set('estimates',JSON.stringify(a));list();toast('Смета удалена')}
 });
 $('save').onclick=()=>{
   let a=[];try{a=JSON.parse(ST.get('estimates')||'[]')}catch(e){}
